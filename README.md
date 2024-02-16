@@ -11,3 +11,5 @@ A limitation of this corpus could be that the different versions by different co
 ## Image descriptions
 
 ### Week 7
+
+This image shows there is some correlation between the energy level and valence of different parts of the requiem by Mozart. This could be because the more serious or sadder parts of the requiem are slower on average and thus Spotify classifies them as less energetic. Another cause could be that Spotify can't really distinguish the difference between serious and a higher tempo and thus classifies parts with a higher tempo as having a higher valence and energy.
