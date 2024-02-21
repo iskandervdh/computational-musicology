@@ -36,7 +36,8 @@ mozart_requiem_audio_features |>
   theme(legend.position = "none") + geom_point() +
   geom_smooth() +
   ggtitle("Comparison between energy and valence in Mozart's Requiem") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(x = "Valence", y = "Energy")
 ```
 
 ***
