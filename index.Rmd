@@ -80,3 +80,54 @@ requiem_introitus_analysis |>
 ***
 
 This is a chromagram that shows the magnitude of each note during the introitus of the requiem by Mozart. The first few seconds of this recording consist of only silence, which explains why there is no pitch class with a magnitude other than 0.5 in the first few seconds. You can mostly see the pitch scales that have higher magnitudes mostly correspond to the key the piece is in, which is D minor. There is also the C# pitch scale that has a higher magnitude in the beginning. This can be explained by the fact that this note appears as in the sheet music using accidentals.
+
+### Dynamic Time Warping of two different versions of the lacrimosa of the Requiem by Mozart
+
+```{r}
+## Berliner Philharmoniker
+lacrimosa_berliner <-
+  get_tidy_audio_analysis("6izxDWP8kx2yErjuHOdhHV") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+## King's College Choir
+lacrimosa_kings <-
+  get_tidy_audio_analysis("3oHSL6pt9LpNrQZuQGu9wL") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+## Vienna Mozart Orchestra
+#lacrimosa_vienna <-
+#  get_tidy_audio_analysis("59RZ5SRrzwUZm0b8QXQOI1") |>
+#  select(segments) |>
+#  unnest(segments) |>
+#  select(start, duration, pitches)
+
+compmus_long_distance(
+  lacrimosa_berliner |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  lacrimosa_kings |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = pitches,
+  method = "euclidean"
+) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  labs(x = "Berliner Philharmoniker", y = "King's College Choir") +
+  theme_minimal() +
+  scale_fill_viridis_c(guide = NULL) +
+  ggtitle("A DTW analysis of two versions of the lacrimosa of Mozart's Requiem") +
+  # Center the title of the plot
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+***
+
+This graph shows the distances between the chroma vectors in two different recordings of the lacrimosa from the Requiem by Mozart. There is some kind of blue (almost) diagonal line visible from the bottom left of the graph to the top right. This indicates that the recordings are very similar in tempo after about 110 seconds it becomes less clear where the line should be, which probably indicates that the tempos at the end of both recordings diverges somewhat.
