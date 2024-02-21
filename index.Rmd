@@ -8,10 +8,15 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+
+# Setup required libraries
+library(tidyverse)
+library(spotifyr)
+library(dplyr)
 ```
 
-## Corpus description
+### Corpus description
 
 My corpus is a collection of multiple versions of the most common parts of a requiem mass, each by a different composer. While the texts of a requiem mass is (almost always) the same the music that composers have made based on these texts differs a lot. I was inspired to choose this as my corpus because I have sung the choir part of multiple requiem masses in the past and currently the choir I sing in is rehearsing the requiem by Mozart, which we will perform in april. Some other examples of composers that have written a requiem mass are Britten, Fauré and Duruflé, but many more versions by other composers are required to make any meaningful comparisons.
 
@@ -19,10 +24,13 @@ The things that are most interesting to look at are the difference in energy, va
 
 A limitation of this corpus could be that the different versions by different composers have quite similar characteristics and can not produce any meaningful insight.
 
-## Image descriptions
+### Image Week 7
 
-### Week 7
+```{r}
+mozart_requiem_audio_features <- spotifyr::get_playlist_audio_features("", "50MRaj6fdGWFu4rDxHvx4C")
+mozart_requiem_audio_features |> ggplot(aes(x = valence, y = energy)) + theme(legend.position = "none") + geom_point() + geom_smooth() + ggtitle("Comparison between energy and valence in Mozart's Requiem") + theme(plot.title = element_text(hjust = 0.5))
+```
 
-![Image plot for week 7](homework_week7.png)
+***
 
 This image shows there is some correlation between the energy level and valence of different parts of the requiem by Mozart. This could be because the more serious or sadder parts of the requiem are slower on average and thus Spotify classifies them as less energetic. Another cause could be that Spotify can't really distinguish the difference between serious and a higher tempo and thus classifies parts with a higher tempo as having a higher valence and energy.
