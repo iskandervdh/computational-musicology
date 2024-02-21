@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(spotifyr)
 library(dplyr)
+library(compmus)
 ```
 
 ### Corpus description
@@ -27,10 +28,51 @@ A limitation of this corpus could be that the different versions by different co
 ### Image Week 7
 
 ```{r}
-mozart_requiem_audio_features <- spotifyr::get_playlist_audio_features("", "50MRaj6fdGWFu4rDxHvx4C")
-mozart_requiem_audio_features |> ggplot(aes(x = valence, y = energy)) + theme(legend.position = "none") + geom_point() + geom_smooth() + ggtitle("Comparison between energy and valence in Mozart's Requiem") + theme(plot.title = element_text(hjust = 0.5))
+mozart_requiem_audio_features <-
+  spotifyr::get_playlist_audio_features("", "50MRaj6fdGWFu4rDxHvx4C")
+
+mozart_requiem_audio_features |>
+  ggplot(aes(x = valence, y = energy)) +
+  theme(legend.position = "none") + geom_point() +
+  geom_smooth() +
+  ggtitle("Comparison between energy and valence in Mozart's Requiem") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ***
 
 This image shows there is some correlation between the energy level and valence of different parts of the requiem by Mozart. This could be because the more serious or sadder parts of the requiem are slower on average and thus Spotify classifies them as less energetic. Another cause could be that Spotify can't really distinguish the difference between serious and a higher tempo and thus classifies parts with a higher tempo as having a higher valence and energy.
+
+
+### Chromagram of the introitus of the Requiem by Mozart
+
+```{r}
+requiem_introitus_analysis <-
+  get_tidy_audio_analysis("3V4FF9d8nBWfFR3fJ8uXEp") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+
+requiem_introitus_analysis |>
+  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+  compmus_gather_chroma() |>
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = pitch_class,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  theme_minimal() +
+  theme(aspect.ratio = 0.45) +
+  scale_fill_viridis_c() +
+  ggtitle("A chromagram of the introitus of Mozart's Requiem") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+***
+
+A chromagram that shows the magnitude of each note during the introitus of the requiem by Mozart
