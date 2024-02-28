@@ -2,8 +2,11 @@
 title: "Computational Musicology"
 author: "Iskander van den Hombergh"
 date: "2024-02-28"
-output: flexdashboard::flex_dashboard
-runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: fill
+    orientation: rows
+__runtime: shiny
 ---
 
 ```{r setup, include=FALSE, cache=TRUE}
@@ -22,6 +25,108 @@ library(compmus)
 mozart_requiem_audio_features <-
   spotifyr::get_playlist_audio_features("", "50MRaj6fdGWFu4rDxHvx4C")
 ```
+
+
+SSM Lacrimosa 
+===============
+
+```{r}
+lacrimosa_berliner_timbre <-
+  get_tidy_audio_analysis("6izxDWP8kx2yErjuHOdhHV") |> # Change URI.
+  compmus_align(bars, segments) |>                     # Change `bars`
+  select(bars) |>                                      #   in all three
+  unnest(bars) |>                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+lacrimosa_kings_timbre <-
+  get_tidy_audio_analysis("3oHSL6pt9LpNrQZuQGu9wL") |> # Change URI.
+  compmus_align(bars, segments) |>                     # Change `bars`
+  select(bars) |>                                      #   in all three
+  unnest(bars) |>                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+```
+
+Column {data-width=600}
+-----------------------
+
+### Berliner Philharmoniker & Swedish Radio Choir
+
+```{r}
+renderPlot({
+  lacrimosa_berliner_timbre |>
+    compmus_self_similarity(timbre, "cosine") |> 
+    ggplot(
+      aes(
+        x = xstart + xduration / 2,
+        width = xduration,
+        y = ystart + yduration / 2,
+        height = yduration,
+        fill = d
+      )
+    ) +
+    geom_tile() +
+    coord_fixed() +
+    scale_fill_viridis_c(guide = "none") +
+    theme_classic() +
+    labs(x = "", y = "")
+})
+```   
+    
+### Acedemy of Ancient Music & Choir of King's College
+
+```{r}
+renderPlot({
+  lacrimosa_kings_timbre |>
+    compmus_self_similarity(timbre, "cosine") |> 
+    ggplot(
+      aes(
+        x = xstart + xduration / 2,
+        width = xduration,
+        y = ystart + yduration / 2,
+        height = yduration,
+        fill = d
+      )
+    ) +
+    geom_tile() +
+    coord_fixed() +
+    scale_fill_viridis_c(guide = "none") +
+    theme_classic() +
+    labs(x = "", y = "")
+})
+```
+
+Column {.sidebar data-width=400}
+--------------------------------
+
+### Description
+
+On this page two self-similarity matrices are shown. These are from two different recordings of the Lacrimosa from the Reqiuem by Mozart. The first one is by the Berliner Philharmoniker and the Swedish Radio Choir, the second one is by the Acedemy of Ancient Music and the Choir of King's College. The sections that are visible in both of the matrices do somewhat line up, but certain sections seem longer in the second matrix.
 
 Overview
 ========
@@ -53,6 +158,7 @@ The things that are most interesting to look at are the difference in energy, va
 
 A limitation of this corpus could be that the different versions by different composers have quite similar characteristics and can not produce any meaningful insight.
 
+
 Mozart
 ======
 
@@ -72,7 +178,7 @@ renderPlot({
 })
 ```
 
-Column {data-width=400}
+Column {.sidebar data-width=400}
 -----------------------
 
 ### Description
@@ -123,6 +229,7 @@ Column {.sidebar data-width=400}
 
 This is a chromagram that shows the magnitude of each note during the introitus of the requiem by Mozart. The first few seconds of this recording consist of only silence, which explains why there is no pitch class with a magnitude other than 0.5 in the first few seconds. You can mostly see the pitch scales that have higher magnitudes mostly correspond to the key the piece is in, which is D minor. There is also the C# pitch scale that has a higher magnitude in the beginning. This can be explained by the fact that this note appears as in the sheet music using accidentals.
 
+
 Dynamic Time Warping 
 ====================
 
@@ -169,7 +276,7 @@ renderPlot({
   ) +
   geom_tile() +
   coord_equal() +
-  labs(x = "Berliner Philharmoniker", y = "King's College Choir") +
+  labs(x = "Berliner Philharmoniker & Swedish Radio Choir", y = "Acedemy of Ancient Music & Choir of King's College") +
   theme_minimal() +
   scale_fill_viridis_c(guide = NULL) +
   ggtitle("A DTW analysis of two versions of the lacrimosa of Mozart's Requiem") +
@@ -184,55 +291,3 @@ Column {.sidebar data-width=400}
 ### Dynamic Time Warping of two different versions of the lacrimosa of the Requiem by Mozart
 
 This graph shows the distances between the chroma vectors in two different recordings of the lacrimosa from the Requiem by Mozart. There is some kind of blue (almost) diagonal line visible from the bottom left of the graph to the top right. This indicates that the recordings are very similar in tempo after about 110 seconds it becomes less clear where the line should be, which probably indicates that the tempos at the end of both recordings diverges somewhat.
-
-Timbre features 
-===============
-
-Column {data-width=600}
------------------------
-
-```{r}
-lacrimosa_berliner_timbre <-
-  get_tidy_audio_analysis("6izxDWP8kx2yErjuHOdhHV") |> # Change URI.
-  compmus_align(bars, segments) |>                     # Change `bars`
-  select(bars) |>                                      #   in all three
-  unnest(bars) |>                                      #   of these lines.
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "rms", norm = "euclidean"              # Change summary & norm.
-      )
-  ) |>
-  mutate(
-    timbre =
-      map(segments,
-        compmus_summarise, timbre,
-        method = "rms", norm = "euclidean"              # Change summary & norm.
-      )
-  )
-
-renderPlot({
-  lacrimosa_berliner_timbre |>
-    compmus_gather_timbre() |>
-    ggplot(
-      aes(
-        x = start + duration / 2,
-        width = duration,
-        y = basis,
-        fill = value
-      )
-    ) +
-    geom_tile() +
-    labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
-    scale_fill_viridis_c() +                              
-    theme_classic()
-})
-```
-
-Column {.sidebar data-width=400}
---------------------------------
-
-### Description
-
-Timbre analysis of the lacrimosa from the Requiem from Mozart based on spotify's timbre features
