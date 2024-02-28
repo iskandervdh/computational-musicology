@@ -1,22 +1,49 @@
 ---
-title: "Computational Musicology Dashboard"
+title: "Computational Musicology"
 author: "Iskander van den Hombergh"
-date: "2024-02-21"
-output: 
-  flexdashboard::flex_dashboard:
-    storyboard: true
+date: "2024-02-28"
+output: flexdashboard::flex_dashboard
+runtime: shiny
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, cache=TRUE}
 # Don't display the output of code blocks
 knitr::opts_chunk$set(echo = FALSE)
 
 # Setup required libraries
+library(shiny)
 library(tidyverse)
 library(spotifyr)
 library(dplyr)
 library(compmus)
 ```
+
+```{r cache=TRUE}
+mozart_requiem_audio_features <-
+  spotifyr::get_playlist_audio_features("", "50MRaj6fdGWFu4rDxHvx4C")
+```
+
+Overview
+========
+
+Column {data-width=500}
+-----------------------
+
+```{r}
+renderPlot({
+  mozart_requiem_audio_features |>
+    ggplot(aes(x = valence, y = energy)) +
+    theme(legend.position = "none") + geom_point() +
+    geom_smooth() +
+    ggtitle("Comparison between energy and valence in Mozart's Requiem") +
+    # Center the title of the plot
+    theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Valence", y = "Energy")
+})
+```
+
+Column {.sidebar data-width=500}
+--------------------------------
 
 ### Corpus description
 
@@ -26,28 +53,38 @@ The things that are most interesting to look at are the difference in energy, va
 
 A limitation of this corpus could be that the different versions by different composers have quite similar characteristics and can not produce any meaningful insight.
 
-### Image Week 7
+Mozart
+======
+
+Column {data-width=600}
+-----------------------
 
 ```{r}
-mozart_requiem_audio_features <-
-  spotifyr::get_playlist_audio_features("", "50MRaj6fdGWFu4rDxHvx4C")
-
-mozart_requiem_audio_features |>
-  ggplot(aes(x = valence, y = energy)) +
-  theme(legend.position = "none") + geom_point() +
-  geom_smooth() +
-  ggtitle("Comparison between energy and valence in Mozart's Requiem") +
-  # Center the title of the plot
-  theme(plot.title = element_text(hjust = 0.5)) +
-  labs(x = "Valence", y = "Energy")
+renderPlot({
+  mozart_requiem_audio_features |>
+    ggplot(aes(x = valence, y = energy)) +
+    theme(legend.position = "none") + geom_point() +
+    geom_smooth() +
+    ggtitle("Comparison between energy and valence in Mozart's Requiem") +
+    # Center the title of the plot
+    theme(plot.title = element_text(hjust = 0.5)) +
+    labs(x = "Valence", y = "Energy")
+})
 ```
 
-***
+Column {data-width=400}
+-----------------------
+
+### Description
 
 This image shows there is some correlation between the energy level and valence of different parts of the requiem by Mozart. This could be because the more serious or sadder parts of the requiem are slower on average and thus Spotify classifies them as less energetic. Another cause could be that Spotify can't really distinguish the difference between serious and a higher tempo and thus classifies parts with a higher tempo as having a higher valence and energy.
 
 
-### Chromagram of the introitus of the Requiem by Mozart
+Chromagram 
+==========
+
+Column {data-width=600}
+-------------------------
 
 ```{r}
 requiem_introitus_analysis <-
@@ -56,7 +93,8 @@ requiem_introitus_analysis <-
   unnest(segments) |>
   select(start, duration, pitches)
 
-requiem_introitus_analysis |>
+renderPlot({
+  requiem_introitus_analysis |>
   mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
   compmus_gather_chroma() |>
   ggplot(
@@ -70,18 +108,26 @@ requiem_introitus_analysis |>
   geom_tile() +
   labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
   theme_minimal() +
-  theme(aspect.ratio = 0.45) +
+  theme(aspect.ratio = 0.25) +
   scale_fill_viridis_c() +
   ggtitle("A chromagram of the introitus of Mozart's Requiem") +
   # Center the title of the plot
   theme(plot.title = element_text(hjust = 0.5))
+})
 ```
 
-***
+Column {.sidebar data-width=400}
+--------------------------------
+
+### Chromagram of the introitus of Mozart's Requiem
 
 This is a chromagram that shows the magnitude of each note during the introitus of the requiem by Mozart. The first few seconds of this recording consist of only silence, which explains why there is no pitch class with a magnitude other than 0.5 in the first few seconds. You can mostly see the pitch scales that have higher magnitudes mostly correspond to the key the piece is in, which is D minor. There is also the C# pitch scale that has a higher magnitude in the beginning. This can be explained by the fact that this note appears as in the sheet music using accidentals.
 
-### Dynamic Time Warping of two different versions of the lacrimosa of the Requiem by Mozart
+Dynamic Time Warping 
+====================
+
+Column {data-width=600}
+-----------------------
 
 ```{r}
 ## Berliner Philharmoniker
@@ -103,12 +149,15 @@ lacrimosa_kings <-
 #  unnest(segments) |>
 #  select(start, duration, pitches)
 
-compmus_long_distance(
+lacrimosa_plot_data <- compmus_long_distance(
   lacrimosa_berliner |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
   lacrimosa_kings |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
   feature = pitches,
   method = "euclidean"
-) |>
+)
+
+renderPlot({
+  lacrimosa_plot_data |>
   ggplot(
     aes(
       x = xstart + xduration / 2,
@@ -126,8 +175,64 @@ compmus_long_distance(
   ggtitle("A DTW analysis of two versions of the lacrimosa of Mozart's Requiem") +
   # Center the title of the plot
   theme(plot.title = element_text(hjust = 0.5))
+})
 ```
 
-***
+Column {.sidebar data-width=400}
+--------------------------------
+
+### Dynamic Time Warping of two different versions of the lacrimosa of the Requiem by Mozart
 
 This graph shows the distances between the chroma vectors in two different recordings of the lacrimosa from the Requiem by Mozart. There is some kind of blue (almost) diagonal line visible from the bottom left of the graph to the top right. This indicates that the recordings are very similar in tempo after about 110 seconds it becomes less clear where the line should be, which probably indicates that the tempos at the end of both recordings diverges somewhat.
+
+Timbre features 
+===============
+
+Column {data-width=600}
+-----------------------
+
+```{r}
+lacrimosa_berliner_timbre <-
+  get_tidy_audio_analysis("6izxDWP8kx2yErjuHOdhHV") |> # Change URI.
+  compmus_align(bars, segments) |>                     # Change `bars`
+  select(bars) |>                                      #   in all three
+  unnest(bars) |>                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+renderPlot({
+  lacrimosa_berliner_timbre |>
+    compmus_gather_timbre() |>
+    ggplot(
+      aes(
+        x = start + duration / 2,
+        width = duration,
+        y = basis,
+        fill = value
+      )
+    ) +
+    geom_tile() +
+    labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+    scale_fill_viridis_c() +                              
+    theme_classic()
+})
+```
+
+Column {.sidebar data-width=400}
+--------------------------------
+
+### Description
+
+Timbre analysis of the lacrimosa from the Requiem from Mozart based on spotify's timbre features
