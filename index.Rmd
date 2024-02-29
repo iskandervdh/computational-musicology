@@ -9,19 +9,18 @@ output:
 __runtime: shiny
 ---
 
-```{r setup, include=FALSE, cache=TRUE}
+```{r setup, include=FALSE}
 # Don't display the output of code blocks
 knitr::opts_chunk$set(echo = FALSE)
 
 # Setup required libraries
-library(shiny)
 library(tidyverse)
 library(spotifyr)
 library(dplyr)
 library(compmus)
 ```
 
-```{r cache=TRUE}
+```{r}
 mozart_requiem_audio_features <-
   spotifyr::get_playlist_audio_features("", "50MRaj6fdGWFu4rDxHvx4C")
 ```
@@ -78,47 +77,43 @@ Column {data-width=600}
 ### Berliner Philharmoniker & Swedish Radio Choir
 
 ```{r}
-renderPlot({
-  lacrimosa_berliner_timbre |>
-    compmus_self_similarity(timbre, "cosine") |> 
-    ggplot(
-      aes(
-        x = xstart + xduration / 2,
-        width = xduration,
-        y = ystart + yduration / 2,
-        height = yduration,
-        fill = d
-      )
-    ) +
-    geom_tile() +
-    coord_fixed() +
-    scale_fill_viridis_c(guide = "none") +
-    theme_classic() +
-    labs(x = "", y = "")
-})
+lacrimosa_berliner_timbre |>
+  compmus_self_similarity(timbre, "cosine") |> 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
 ```   
     
 ### Acedemy of Ancient Music & Choir of King's College
 
 ```{r}
-renderPlot({
-  lacrimosa_kings_timbre |>
-    compmus_self_similarity(timbre, "cosine") |> 
-    ggplot(
-      aes(
-        x = xstart + xduration / 2,
-        width = xduration,
-        y = ystart + yduration / 2,
-        height = yduration,
-        fill = d
-      )
-    ) +
-    geom_tile() +
-    coord_fixed() +
-    scale_fill_viridis_c(guide = "none") +
-    theme_classic() +
-    labs(x = "", y = "")
-})
+lacrimosa_kings_timbre |>
+  compmus_self_similarity(timbre, "cosine") |> 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
 ```
 
 Column {.sidebar data-width=400}
@@ -134,17 +129,17 @@ Overview
 Column {data-width=500}
 -----------------------
 
+### Overview
+
 ```{r}
-renderPlot({
-  mozart_requiem_audio_features |>
-    ggplot(aes(x = valence, y = energy)) +
-    theme(legend.position = "none") + geom_point() +
-    geom_smooth() +
-    ggtitle("Comparison between energy and valence in Mozart's Requiem") +
-    # Center the title of the plot
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(x = "Valence", y = "Energy")
-})
+mozart_requiem_audio_features |>
+  ggplot(aes(x = valence, y = energy)) +
+  theme(legend.position = "none") + geom_point() +
+  geom_smooth() +
+  ggtitle("Comparison between energy and valence in Mozart's Requiem") +
+  # Center the title of the plot
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(x = "Valence", y = "Energy")
 ```
 
 Column {.sidebar data-width=500}
@@ -165,17 +160,17 @@ Mozart
 Column {data-width=600}
 -----------------------
 
+### Mozart
+
 ```{r}
-renderPlot({
-  mozart_requiem_audio_features |>
-    ggplot(aes(x = valence, y = energy)) +
-    theme(legend.position = "none") + geom_point() +
-    geom_smooth() +
-    ggtitle("Comparison between energy and valence in Mozart's Requiem") +
-    # Center the title of the plot
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(x = "Valence", y = "Energy")
-})
+mozart_requiem_audio_features |>
+  ggplot(aes(x = valence, y = energy)) +
+  theme(legend.position = "none") + geom_point() +
+  geom_smooth() +
+  ggtitle("Comparison between energy and valence in Mozart's Requiem") +
+  # Center the title of the plot
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(x = "Valence", y = "Energy")
 ```
 
 Column {.sidebar data-width=400}
@@ -192,6 +187,8 @@ Chromagram
 Column {data-width=600}
 -------------------------
 
+### Chromagram
+
 ```{r}
 requiem_introitus_analysis <-
   get_tidy_audio_analysis("3V4FF9d8nBWfFR3fJ8uXEp") |>
@@ -199,10 +196,9 @@ requiem_introitus_analysis <-
   unnest(segments) |>
   select(start, duration, pitches)
 
-renderPlot({
-  requiem_introitus_analysis |>
-  mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
-  compmus_gather_chroma() |>
+requiem_introitus_analysis |>
+mutate(pitches = map(pitches, compmus_normalise, "euclidean")) |>
+compmus_gather_chroma() |>
   ggplot(
     aes(
       x = start + duration / 2,
@@ -219,7 +215,6 @@ renderPlot({
   ggtitle("A chromagram of the introitus of Mozart's Requiem") +
   # Center the title of the plot
   theme(plot.title = element_text(hjust = 0.5))
-})
 ```
 
 Column {.sidebar data-width=400}
@@ -235,6 +230,8 @@ Dynamic Time Warping
 
 Column {data-width=600}
 -----------------------
+
+### Dynamic Time Warping 
 
 ```{r}
 ## Berliner Philharmoniker
@@ -263,8 +260,7 @@ lacrimosa_plot_data <- compmus_long_distance(
   method = "euclidean"
 )
 
-renderPlot({
-  lacrimosa_plot_data |>
+lacrimosa_plot_data |>
   ggplot(
     aes(
       x = xstart + xduration / 2,
@@ -282,7 +278,6 @@ renderPlot({
   ggtitle("A DTW analysis of two versions of the lacrimosa of Mozart's Requiem") +
   # Center the title of the plot
   theme(plot.title = element_text(hjust = 0.5))
-})
 ```
 
 Column {.sidebar data-width=400}
