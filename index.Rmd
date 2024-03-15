@@ -115,51 +115,33 @@ key_templates <-
 ```
 
 
-Chord analysis
-==============
+Tempogram
+=========
 
-Column {data-width=600}
+Column {data-width=500}
 -----------------------
 
-### Chord analysis
+### Tempogram Lacrimosa Mozart
 
-```{r chord_analysis, cache=TRUE}
-lacrimosa_berliner_chords <-
-  get_tidy_audio_analysis("6izxDWP8kx2yErjuHOdhHV") |>
-  compmus_align(sections, segments) |>
-  select(sections) |>
-  unnest(sections) |>
-  mutate(
-    pitches =
-      map(segments,
-        compmus_summarise, pitches,
-        method = "mean", norm = "manhattan"
-      )
-  )
+```{r tempogram, cache=TRUE}
+requiem_introitus_analysis_tempo <-
+  get_tidy_audio_analysis("6izxDWP8kx2yErjuHOdhHV")
 
-lacrimosa_berliner_chords |> 
-  compmus_match_pitch_template(
-    chord_templates,         # Change to chord_templates if desired
-    method = "euclidean",  # Try different distance metrics
-    norm = "manhattan"     # Try different norms
-  ) |>
-  ggplot(
-    aes(x = start + duration / 2, width = duration, y = name, fill = d)
-  ) +
-  geom_tile() +
+requiem_introitus_analysis_tempo |>
+    tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
   scale_fill_viridis_c(guide = "none") +
-  theme_minimal() +
-  theme(aspect.ratio = 0.65) +
-  ggtitle("Chord analysis of the Lacrimosa by Mozart") +
-  labs(x = "Time (s)", y = "")
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
 ```
 
-Column {.sidebar data-width=400}
------------------------
+Column {.sidebar data-width=500}
+--------------------------------
 
 ### Description
 
-In this chordogram it is visible that mainly D, F and A chords are present in this piece. This matches up since it is written in D minor, but changes a lot with many accidentals. The start of the piece should contain a lot more of the actual D minor chord, but that is not visible in this chordogram. This could be because the instruments were tuned lower than `A = 440 Hz` which is quite common for orchestras playing pieces from the classical period to do. From this chord analysis it also quite visible that from around 95 to 110 seconds there is very high match for a F chord. This matches up with the part of the piece that only the orchestra is playing a lot of notes that are part of a F major chord.
+As you can see in the tempogram on the right the attempt to recognize any constant tempo for this recording of the Lacrimosa by Mozart performed by the Berliner Philharmoniker was not really successful. There are multiple reasons why this is the case. First of all there is no clear percussion in this piece that plays throughout. The second thing that most likely contributes to the lack of recognizably for any tempo is the fact that the piece consist of mostly strings and vocals. These instruments have a relatively slow attack and thus no clear onsets which the tempo analysis function can grab onto. There is however a higher likelihood of the tempo being around 87 BPM, especially between 20 and 50 seconds. This piece should be performed around 84 BPM, so this is the closest the algorithm came to a correct estimation of the tempo of this recording.
 
 Overview
 ========
@@ -169,7 +151,7 @@ Column {data-width=500}
 
 ### Overview
 
-```{r, cache=TRUE}
+```{r overview, cache=TRUE}
 mozart_requiem_audio_features |>
   ggplot(aes(x = valence, y = energy)) +
   theme(legend.position = "none") + geom_point() +
@@ -433,3 +415,50 @@ Column {.sidebar data-width=400}
 
 On this page two self-similarity matrices are shown. These are from two different recordings of the Lacrimosa from the Reqiuem by Mozart. The first one is by the Berliner Philharmoniker and the Swedish Radio Choir, the second one is by the Acedemy of Ancient Music and the Choir of King's College. The sections that are visible in both of the matrices do somewhat line up, but certain sections seem longer in the second matrix.
 
+
+
+Chord analysis
+==============
+
+Column {data-width=600}
+-----------------------
+
+### Chord analysis
+
+```{r chord_analysis, cache=TRUE}
+lacrimosa_berliner_chords <-
+  get_tidy_audio_analysis("6izxDWP8kx2yErjuHOdhHV") |>
+  compmus_align(sections, segments) |>
+  select(sections) |>
+  unnest(sections) |>
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      )
+  )
+
+lacrimosa_berliner_chords |> 
+  compmus_match_pitch_template(
+    chord_templates,         # Change to chord_templates if desired
+    method = "euclidean",  # Try different distance metrics
+    norm = "manhattan"     # Try different norms
+  ) |>
+  ggplot(
+    aes(x = start + duration / 2, width = duration, y = name, fill = d)
+  ) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  theme(aspect.ratio = 0.65) +
+  ggtitle("Chord analysis of the Lacrimosa by Mozart") +
+  labs(x = "Time (s)", y = "")
+```
+
+Column {.sidebar data-width=400}
+-----------------------
+
+### Description
+
+In this chordogram it is visible that mainly D, F and A chords are present in this piece. This matches up since it is written in D minor, but changes a lot with many accidentals. The start of the piece should contain a lot more of the actual D minor chord, but that is not visible in this chordogram. This could be because the instruments were tuned lower than `A = 440 Hz` which is quite common for orchestras playing pieces from the classical period to do. From this chord analysis it also quite visible that from around 95 to 110 seconds there is very high match for a F chord. This matches up with the part of the piece that only the orchestra is playing a lot of notes that are part of a F major chord.
